@@ -1,0 +1,93 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "linkshort.fullname" . }}
+  labels:
+    {{- include "linkshort.labels" . | nindent 4 }}
+  {{- with .Values.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- if .Values.ingress.tls.enabled }}
+  tls:
+    - hosts:
+        - {{ .Values.domains.frontend }}
+        - {{ .Values.domains.api }}
+        - {{ .Values.domains.shortUrl }}
+      secretName: {{ .Values.ingress.tls.secretName }}
+  {{- end }}
+  rules:
+    # Frontend
+    - host: {{ .Values.domains.frontend }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "linkshort.fullname" . }}-frontend
+                port:
+                  number: {{ .Values.frontend.service.port }}
+    
+    # API
+    - host: {{ .Values.domains.api }}
+      http:
+        paths:
+          - path: /shorten
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "linkshort.fullname" . }}-url-service
+                port:
+                  number: {{ .Values.urlService.service.port }}
+          - path: /urls
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "linkshort.fullname" . }}-url-service
+                port:
+                  number: {{ .Values.urlService.service.port }}
+          - path: /health
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "linkshort.fullname" . }}-url-service
+                port:
+                  number: {{ .Values.urlService.service.port }}
+          - path: /stats
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "linkshort.fullname" . }}-analytics
+                port:
+                  number: {{ .Values.analyticsService.service.port }}
+          - path: /track
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "linkshort.fullname" . }}-analytics
+                port:
+                  number: {{ .Values.analyticsService.service.port }}
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "linkshort.fullname" . }}-url-service
+                port:
+                  number: {{ .Values.urlService.service.port }}
+    
+    # Short URLs
+    - host: {{ .Values.domains.shortUrl }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "linkshort.fullname" . }}-url-service
+                port:
+                  number: {{ .Values.urlService.service.port }}
+{{- end }}

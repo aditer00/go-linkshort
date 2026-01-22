@@ -1,0 +1,68 @@
+{{- if .Values.urlService.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "linkshort.fullname" . }}-url-service
+  labels:
+    {{- include "linkshort.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "linkshort.fullname" . }}-url-service
+  minReplicas: {{ .Values.urlService.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.urlService.autoscaling.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.urlService.autoscaling.targetCPUUtilization }}
+{{- end }}
+---
+{{- if .Values.analyticsService.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "linkshort.fullname" . }}-analytics
+  labels:
+    {{- include "linkshort.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "linkshort.fullname" . }}-analytics
+  minReplicas: {{ .Values.analyticsService.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.analyticsService.autoscaling.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.analyticsService.autoscaling.targetCPUUtilization }}
+{{- end }}
+---
+{{- if .Values.frontend.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "linkshort.fullname" . }}-frontend
+  labels:
+    {{- include "linkshort.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "linkshort.fullname" . }}-frontend
+  minReplicas: {{ .Values.frontend.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.frontend.autoscaling.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.frontend.autoscaling.targetCPUUtilization }}
+{{- end }}

@@ -1,0 +1,70 @@
+{{- if .Values.analyticsService.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "linkshort.fullname" . }}-analytics
+  labels:
+    {{- include "linkshort.labels" . | nindent 4 }}
+    app.kubernetes.io/component: analytics-service
+spec:
+  replicas: {{ .Values.analyticsService.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "linkshort.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: analytics-service
+  template:
+    metadata:
+      labels:
+        {{- include "linkshort.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: analytics-service
+    spec:
+      containers:
+        - name: analytics-service
+          image: "{{ .Values.analyticsService.image.repository }}:{{ .Values.analyticsService.image.tag | default .Values.global.imageTag }}"
+          imagePullPolicy: {{ .Values.analyticsService.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.analyticsService.service.port }}
+          env:
+            - name: PORT
+              value: {{ .Values.analyticsService.service.port | quote }}
+            - name: STORAGE_TYPE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "linkshort.fullname" . }}-config
+                  key: STORAGE_TYPE
+            - name: REDIS_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "linkshort.fullname" . }}-config
+                  key: REDIS_URL
+          resources:
+            {{- toYaml .Values.analyticsService.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.analyticsService.service.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.analyticsService.service.port }}
+            initialDelaySeconds: 3
+            periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "linkshort.fullname" . }}-analytics
+  labels:
+    {{- include "linkshort.labels" . | nindent 4 }}
+    app.kubernetes.io/component: analytics-service
+spec:
+  type: {{ .Values.analyticsService.service.type }}
+  ports:
+    - port: {{ .Values.analyticsService.service.port }}
+      targetPort: {{ .Values.analyticsService.service.port }}
+  selector:
+    {{- include "linkshort.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: analytics-service
+{{- end }}
