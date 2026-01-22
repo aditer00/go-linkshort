@@ -29,6 +29,15 @@ COPY . .
 # Uncomment the following line in case you want to disable telemetry during the build.
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Build-time arguments for API endpoints (NEXT_PUBLIC_* must be set at build time)
+ARG NEXT_PUBLIC_URL_SERVICE=http://localhost:8080
+ARG NEXT_PUBLIC_ANALYTICS_SERVICE=http://localhost:8081
+ARG NEXT_PUBLIC_SHORT_URL_DOMAIN=http://localhost:8080
+
+ENV NEXT_PUBLIC_URL_SERVICE=$NEXT_PUBLIC_URL_SERVICE
+ENV NEXT_PUBLIC_ANALYTICS_SERVICE=$NEXT_PUBLIC_ANALYTICS_SERVICE
+ENV NEXT_PUBLIC_SHORT_URL_DOMAIN=$NEXT_PUBLIC_SHORT_URL_DOMAIN
+
 RUN \
   if [ -f yarn.lock ]; then yarn run build; \
   elif [ -f package-lock.json ]; then npm run build; \
